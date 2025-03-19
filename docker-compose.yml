@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:17.4-alpine
+    env_file:
+      - .env-non-dev
+    ports:
+      - 5432:5432
+
+  redis:
+    image: redis:7.4.2
+
+  booking:
+    build:
+      context: .
+    env_file:
+      - .env-non-dev
+    depends_on:
+      - db
+      - redis
+    command: ["/booking/docker/app.sh"]
+    ports:
+      - 7777:8000
+
+  celery:
+    build:
+      context: .
+    command: ["/booking/docker/celery.sh", "celery"]
+    env_file:
+      - .env-non-dev
+    depends_on:
+      - redis
+
+  flower:
+    build:
+      context: .
+    command: ["/booking/docker/celery.sh", "flower"]
+    env_file:
+      - .env-non-dev
+    depends_on:
+      - redis
+    ports:
+      - 5555:5555
